@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -22,8 +23,8 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-type validResponse struct {
-	Valid bool `json:"valid"`
+type bodyResp struct {
+	Body string `json:"cleaned_body"`
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -55,10 +56,61 @@ func (cfg *apiConfig) handlerReset() http.HandlerFunc {
 	})
 }
 
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	w.WriteHeader(code)
+	resp, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("Error encoding response: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(resp)
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) {
+	w.WriteHeader(code)
+
+	errResp := errorResponse{
+		Error: msg,
+	}
+	resp, err := json.Marshal(errResp)
+	if err != nil {
+		log.Printf("Error encoding response: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(resp)
+}
+
 func handleHealthz(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte("OK"))
+}
+
+func validateChirp(str string) error {
+	if len(str) > 140 {
+		return fmt.Errorf("chirp is too long")
+	}
+
+	return nil
+}
+
+func removeProfaneWords(str string) string {
+	badWords := map[string]string{
+		"kerfuffle": "****",
+		"sharbert":  "****",
+		"fornax":    "****",
+	}
+
+	splittedWords := strings.Split(str, " ")
+	for i, word := range splittedWords {
+		if replace, found := badWords[strings.ToLower(word)]; found {
+			splittedWords[i] = replace
+		}
+	}
+
+	return strings.Join(splittedWords, " ")
 }
 
 func handleValidateChirp(res http.ResponseWriter, req *http.Request) {
@@ -66,48 +118,24 @@ func handleValidateChirp(res http.ResponseWriter, req *http.Request) {
 	params := parameters{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		errResp := errorResponse{
-			Error: "Something went wrong",
-		}
-		resp, err := json.Marshal(errResp)
-		if err != nil {
-			log.Printf("Error enconding response: %s", err)
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		log.Printf("Error decoding parameters: %s", err)
-		res.WriteHeader(http.StatusInternalServerError)
-		res.Write(resp)
+		log.Printf("Error decoding body: %s", err)
+		respondWithError(res, http.StatusInternalServerError, "something went wrong")
 		return
 	}
 
-	if len(params.Body) > 140 {
-		res.WriteHeader(http.StatusBadRequest)
-
-		errResp := errorResponse{
-			Error: "Chirp is too long",
-		}
-		resp, err := json.Marshal(errResp)
-		if err != nil {
-			log.Printf("Error enconding response: %s", err)
-			res.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		res.Write(resp)
-		return
-	}
-
-	res.WriteHeader(http.StatusOK)
-	validResp := validResponse{
-		Valid: true,
-	}
-	resp, err := json.Marshal(validResp)
+	err = validateChirp(params.Body)
 	if err != nil {
-		log.Printf("Error enconding response: %s", err)
-		res.WriteHeader(http.StatusInternalServerError)
+		respondWithError(res, http.StatusBadRequest, err.Error())
 		return
 	}
-	res.Write(resp)
+
+	cleanedBody := removeProfaneWords(params.Body)
+
+	bodyResp := bodyResp{
+		Body: cleanedBody,
+	}
+
+	respondWithJSON(res, http.StatusOK, bodyResp)
 }
 
 func main() {
