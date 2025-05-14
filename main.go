@@ -1,17 +1,13 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"sync/atomic"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/lucashthiele/chirpy/internal/config"
-	"github.com/lucashthiele/chirpy/internal/database"
 	"github.com/lucashthiele/chirpy/internal/handlers"
 )
 
@@ -19,17 +15,6 @@ const port string = "42069"
 
 func getFilepathRoot() http.Dir {
 	return http.Dir(".")
-}
-
-func createDatabaseInstance() error {
-	dbURL := os.Getenv("DB_URL")
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		return fmt.Errorf("error opening database connection: %s", err.Error())
-	}
-
-	_ = database.New(db)
-	return nil
 }
 
 func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
@@ -50,16 +35,11 @@ func main() {
 		return
 	}
 
-	err = createDatabaseInstance()
+	cfg, err := config.New()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Error setting configuration: %s", err.Error())
 		return
 	}
-
-	cfg := &config.ApiConfig{
-		FileServerHits: &atomic.Int32{},
-	}
-	cfg.FileServerHits.Store(0)
 	mux := http.NewServeMux()
 
 	configureRoutes(mux, cfg)

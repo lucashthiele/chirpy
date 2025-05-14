@@ -1,13 +1,47 @@
 package config
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	"github.com/lucashthiele/chirpy/internal/database"
 )
 
 type ApiConfig struct {
 	FileServerHits *atomic.Int32
+	Db             *database.Queries
+}
+
+var instance *ApiConfig
+
+func createDatabaseInstance() (*database.Queries, error) {
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		return &database.Queries{}, fmt.Errorf("error opening database connection: %s", err.Error())
+	}
+
+	return database.New(db), nil
+}
+
+func New() (*ApiConfig, error) {
+	if instance == nil {
+		db, err := createDatabaseInstance()
+		if err != nil {
+			return &ApiConfig{}, nil
+		}
+
+		instance = &ApiConfig{
+			FileServerHits: &atomic.Int32{},
+			Db:             db,
+		}
+		instance.FileServerHits.Store(0)
+	}
+
+	return instance, nil
 }
 
 func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {

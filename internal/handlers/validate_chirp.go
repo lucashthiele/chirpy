@@ -10,7 +10,7 @@ import (
 	"github.com/lucashthiele/chirpy/pkg/response"
 )
 
-type parameters struct {
+type params struct {
 	Body string `json:"body"`
 }
 
@@ -45,7 +45,7 @@ func removeProfaneWords(str string) string {
 
 func HandleValidateChirp(res http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
-	params := parameters{}
+	params := params{}
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding body: %s", err)
