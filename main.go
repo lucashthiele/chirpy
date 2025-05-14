@@ -1,12 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"sync/atomic"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/lucashthiele/chirpy/internal/database"
 )
 
 const port string = "42069"
@@ -139,6 +145,21 @@ func handleValidateChirp(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Printf("Error loading env: %s", err.Error())
+		return
+	}
+
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		fmt.Printf("Error opening database connection: %s", err.Error())
+		return
+	}
+
+	_ = database.New(db)
+
 	cfg := &apiConfig{
 		fileServerHits: &atomic.Int32{},
 	}
