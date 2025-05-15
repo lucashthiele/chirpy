@@ -8,9 +8,9 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/lucashthiele/chirpy/internal/config"
-	healthz "github.com/lucashthiele/chirpy/internal/handlers/healtzh"
-	"github.com/lucashthiele/chirpy/internal/handlers/user"
-	"github.com/lucashthiele/chirpy/internal/handlers/validate"
+	"github.com/lucashthiele/chirpy/internal/handlers/chirps"
+	"github.com/lucashthiele/chirpy/internal/handlers/healthz"
+	"github.com/lucashthiele/chirpy/internal/handlers/users"
 )
 
 const port string = "42069"
@@ -36,8 +36,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("POST /admin/reset", cfg.HandleReset())
 
 	mux.HandleFunc("GET /api/healthz", healthz.HandleHealthz)
-	mux.HandleFunc("POST /api/validate_chirp", validate.HandleValidateChirp)
-	mux.HandleFunc("POST /api/users", user.HandleCreateUsers)
+	mux.HandleFunc("POST /api/chirps", chirps.HandleCreateChirp)
+	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 }
 
 func main() {

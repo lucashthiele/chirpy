@@ -1,0 +1,95 @@
+package chirps
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/lucashthiele/chirpy/internal/config"
+	"github.com/lucashthiele/chirpy/internal/database"
+	"github.com/lucashthiele/chirpy/pkg/parser"
+	"github.com/lucashthiele/chirpy/pkg/response"
+)
+
+type params struct {
+	Body   string    `json:"body"`
+	UserId uuid.UUID `json:"user_id"`
+}
+
+type responseData struct {
+	Id        string    `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Body      string    `json:"body"`
+	UserId    string    `json:"user_id"`
+}
+
+func validateChirp(str string) error {
+	if len(str) > 140 {
+		return fmt.Errorf("chirp is too long")
+	}
+
+	return nil
+}
+
+func removeProfaneWords(str string) string {
+	badWords := map[string]string{
+		"kerfuffle": "****",
+		"sharbert":  "****",
+		"fornax":    "****",
+	}
+
+	splittedWords := strings.Split(str, " ")
+	for i, word := range splittedWords {
+		if replace, found := badWords[strings.ToLower(word)]; found {
+			splittedWords[i] = replace
+		}
+	}
+
+	return strings.Join(splittedWords, " ")
+}
+
+func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	params := &params{}
+
+	err = parser.ParseBody(req.Body, params)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	err = validateChirp(params.Body)
+	if err != nil {
+		response.RespondWithError(res, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	cleanedBody := removeProfaneWords(params.Body)
+
+	chirp := database.CreateChirpParams{
+		Body:   cleanedBody,
+		UserID: params.UserId,
+	}
+
+	createdChirp, err := cfg.Db.CreateChirp(req.Context(), chirp)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+		return
+	}
+
+	bodyResp := responseData{
+		Id:        createdChirp.ID.String(),
+		CreatedAt: createdChirp.CreatedAt,
+		UpdatedAt: createdChirp.UpdatedAt,
+		Body:      createdChirp.Body,
+		UserId:    createdChirp.UserID.String(),
+	}
+
+	response.RespondWithJSON(res, http.StatusCreated, bodyResp)
+}
