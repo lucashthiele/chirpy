@@ -22,3 +22,12 @@ SELECT ID,
        USER_ID
   FROM CHIRPS
  ORDER BY CREATED_AT ASC;
+
+-- name: GetChirpByID :one
+SELECT ID,
+       CREATED_AT,
+       UPDATED_AT,
+       BODY,
+       USER_ID
+  FROM CHIRPS
+ WHERE ID = $1;

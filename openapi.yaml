@@ -1,13 +1,16 @@
-openapi: 3.0.3
+openapi: 3.1.3
 info:
   title: Chirpy API
   version: 1.0.0
   description: API specification for the Chirpy backend service.
 servers:
   - url: http://localhost:42069
+    description: Local dev
 paths:
   /api/healthz:
     get:
+      tags:
+        - Admin
       summary: Health check endpoint
       description: Returns 200 OK if the service is running.
       responses:
@@ -17,8 +20,46 @@ paths:
             text/plain:
               schema:
                 type: string
+  /api/chirps/{chirpID}:
+    get:
+      tags:
+        - Chirps
+      summary: Get a chirp.
+      description: Get a single chirp by it's ID.
+      parameters:
+        - name: chirpID
+          in: path
+          description: The ID of the chirps.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The chirp.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "4a13e062-09d8-41b7-8a51-85c85cd4b528"
+                  created_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  updated_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  body:
+                    type: string
+                    example: "Hello, world!"
+                  user_id:
+                    type: string
+                    example: "123e4567-e89b-12d3-a456-426614174000"
   /api/chirps:
     post:
+      tags:
+        - Chirps
       summary: Create a chirp
       description: Validates a chirp (message) and create it.
       requestBody:
@@ -67,6 +108,8 @@ paths:
                   error:
                     type: string
     get:
+      tags:
+        - Chirps
       summary: Get all chirps.
       description: List all chirps. Order by created at.
       responses:
@@ -96,6 +139,8 @@ paths:
                       example: "123e4567-e89b-12d3-a456-426614174000"                 
   /api/users:
     post:
+      tags:
+        - Users
       summary: Create user
       description: Creates a new user.
       requestBody:
@@ -139,6 +184,8 @@ paths:
                     type: string
   /admin/metrics:
     get:
+      tags:
+        - Admin
       summary: Metrics endpoint
       description: Returns internal metrics for the application.
       responses:
@@ -150,6 +197,8 @@ paths:
                 type: string
   /admin/reset:
     post:
+      tags:
+        - Admin
       summary: Reset everything
       description: Resets application data. It will only work when PLATFORM is dev.
       responses:

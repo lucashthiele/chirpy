@@ -1,6 +1,7 @@
 package chirps
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strings"
@@ -94,7 +95,7 @@ func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
 	response.RespondWithJSON(res, http.StatusCreated, bodyResp)
 }
 
-func HandelGetAllChirps(res http.ResponseWriter, req *http.Request) {
+func HandleGetAllChirps(res http.ResponseWriter, req *http.Request) {
 	cfg, err := config.New()
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
@@ -115,6 +116,40 @@ func HandelGetAllChirps(res http.ResponseWriter, req *http.Request) {
 			Body:      chirp.Body,
 			UserId:    chirp.UserID.String(),
 		}
+	}
+
+	response.RespondWithJSON(res, http.StatusOK, bodyResp)
+}
+
+func HandlerGetChirpByID(res http.ResponseWriter, req *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	chirpID := req.PathValue("chirpID")
+
+	chirpUUID, err := uuid.Parse(chirpID)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	chirp, err := cfg.Db.GetChirpByID(req.Context(), chirpUUID)
+	if err == sql.ErrNoRows {
+		response.RespondWithError(res, http.StatusNotFound, "Not found")
+		return
+	}
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+		return
+	}
+
+	bodyResp := responseData{
+		Id:        chirp.ID.String(),
+		CreatedAt: chirp.CreatedAt,
+		UpdatedAt: chirp.UpdatedAt,
+		Body:      chirp.Body,
+		UserId:    chirp.UserID.String(),
 	}
 
 	response.RespondWithJSON(res, http.StatusOK, bodyResp)

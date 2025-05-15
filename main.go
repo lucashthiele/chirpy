@@ -38,7 +38,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("GET /api/healthz", healthz.HandleHealthz)
 
 	mux.HandleFunc("POST /api/chirps", chirps.HandleCreateChirp)
-	mux.HandleFunc("GET /api/chirps", chirps.HandelGetAllChirps)
+	mux.HandleFunc("GET /api/chirps", chirps.HandleGetAllChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", chirps.HandlerGetChirpByID)
 
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 }
