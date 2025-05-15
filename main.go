@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/lucashthiele/chirpy/internal/config"
+	"github.com/lucashthiele/chirpy/internal/handlers/auth"
 	"github.com/lucashthiele/chirpy/internal/handlers/chirps"
 	"github.com/lucashthiele/chirpy/internal/handlers/healthz"
 	"github.com/lucashthiele/chirpy/internal/handlers/users"
@@ -40,6 +41,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("POST /api/chirps", chirps.HandleCreateChirp)
 	mux.HandleFunc("GET /api/chirps", chirps.HandleGetAllChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", chirps.HandlerGetChirpByID)
+
+	mux.HandleFunc("POST /api/login", auth.HandleLogin)
 
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 }
