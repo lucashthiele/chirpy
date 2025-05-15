@@ -1,4 +1,4 @@
-package handlers
+package validate
 
 import (
 	"encoding/json"
@@ -49,7 +49,7 @@ func HandleValidateChirp(res http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(&params)
 	if err != nil {
 		log.Printf("Error decoding body: %s", err)
-		response.RespondWithError(res, http.StatusInternalServerError, "something went wrong")
+		response.RespondWithInternalServerError(res, err)
 		return
 	}
 

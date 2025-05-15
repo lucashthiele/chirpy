@@ -8,13 +8,24 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/lucashthiele/chirpy/internal/config"
-	"github.com/lucashthiele/chirpy/internal/handlers"
+	healthz "github.com/lucashthiele/chirpy/internal/handlers/healtzh"
+	"github.com/lucashthiele/chirpy/internal/handlers/user"
+	"github.com/lucashthiele/chirpy/internal/handlers/validate"
 )
 
 const port string = "42069"
 
 func getFilepathRoot() http.Dir {
 	return http.Dir(".")
+}
+
+func setupSwagger(mux *http.ServeMux) {
+	mux.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "openapi.yaml")
+	})
+
+	fs := http.FileServer(http.Dir("./swagger-ui"))
+	mux.Handle("/api/swagger/", http.StripPrefix("/api/swagger/", fs))
 }
 
 func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
@@ -24,8 +35,9 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("GET /admin/metrics", cfg.HandleMetrics())
 	mux.HandleFunc("POST /admin/reset", cfg.HandleReset())
 
-	mux.HandleFunc("GET /api/healthz", handlers.HandleHealthz)
-	mux.HandleFunc("POST /api/validate_chirp", handlers.HandleValidateChirp)
+	mux.HandleFunc("GET /api/healthz", healthz.HandleHealthz)
+	mux.HandleFunc("POST /api/validate_chirp", validate.HandleValidateChirp)
+	mux.HandleFunc("POST /api/users", user.HandleCreateUsers)
 }
 
 func main() {
@@ -43,6 +55,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	configureRoutes(mux, cfg)
+	setupSwagger(mux)
 
 	server := &http.Server{
 		Handler: mux,

@@ -3,14 +3,17 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
 
 	"github.com/lucashthiele/chirpy/internal/database"
+	"github.com/lucashthiele/chirpy/pkg/response"
 )
 
 type ApiConfig struct {
+	Platform       string
 	FileServerHits *atomic.Int32
 	Db             *database.Queries
 }
@@ -35,6 +38,7 @@ func New() (*ApiConfig, error) {
 		}
 
 		instance = &ApiConfig{
+			Platform:       os.Getenv("PLATFORM"),
 			FileServerHits: &atomic.Int32{},
 			Db:             db,
 		}
@@ -53,7 +57,13 @@ func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 
 func (cfg *ApiConfig) HandleReset() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if cfg.Platform != "dev" {
+			response.RespondWithError(w, http.StatusForbidden, "Forbidden")
+			return
+		}
+		cfg.Db.DeleteAllUsers(r.Context())
 		cfg.FileServerHits.Store(0)
+		log.Println("Reset endpoint called. Everything was wiped")
 		w.WriteHeader(http.StatusOK)
 	})
 }

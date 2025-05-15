@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: Chirpy API
+  version: 1.0.0
+  description: API specification for the Chirpy backend service.
+servers:
+  - url: http://localhost:42069
+paths:
+  /api/healthz:
+    get:
+      summary: Health check endpoint
+      description: Returns 200 OK if the service is running.
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/chirps:
+    post:
+      summary: Create a chirp
+      description: Validates a chirp (message) and create it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: The chirp message to validate.
+                user_id:
+                  type: string
+                  description: The UUID of the creating user.
+      responses:
+        '201':
+          description: Chirp created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "4a13e062-09d8-41b7-8a51-85c85cd4b528"
+                  created_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  updated_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  body:
+                    type: string
+                    example: "Hello, world!"
+                  user_id:
+                    type: string
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+        '400':
+          description: Invalid request or chirp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/users:
+    post:
+      summary: Create user
+      description: Creates a new user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's email
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  updated_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  email:
+                    type: string
+                    example: "user@example.com"
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /admin/metrics:
+    get:
+      summary: Metrics endpoint
+      description: Returns internal metrics for the application.
+      responses:
+        '200':
+          description: Successful response with metrics
+          content:
+            text/html:
+              schema:
+                type: string
+  /admin/reset:
+    post:
+      summary: Reset everything
+      description: Resets application data. It will only work when PLATFORM is dev.
+      responses:
+        '200':
+          description: Reset successfully
+        '403':
+          description: Forbidden
