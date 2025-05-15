@@ -13,3 +13,12 @@ INSERT INTO CHIRPS(
   $2
 )
 RETURNING *;
+
+-- name: ListAllChirps :many
+SELECT ID,
+       CREATED_AT,
+       UPDATED_AT,
+       BODY,
+       USER_ID
+  FROM CHIRPS
+ ORDER BY CREATED_AT ASC;

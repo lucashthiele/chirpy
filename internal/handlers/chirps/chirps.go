@@ -93,3 +93,29 @@ func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
 
 	response.RespondWithJSON(res, http.StatusCreated, bodyResp)
 }
+
+func HandelGetAllChirps(res http.ResponseWriter, req *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	chirps, err := cfg.Db.ListAllChirps(req.Context())
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	bodyResp := make([]responseData, len(chirps))
+
+	for i, chirp := range chirps {
+		bodyResp[i] = responseData{
+			Id:        chirp.ID.String(),
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+			Body:      chirp.Body,
+			UserId:    chirp.UserID.String(),
+		}
+	}
+
+	response.RespondWithJSON(res, http.StatusOK, bodyResp)
+}

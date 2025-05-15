@@ -66,6 +66,34 @@ paths:
                 properties:
                   error:
                     type: string
+    get:
+      summary: Get all chirps.
+      description: List all chirps. Order by created at.
+      responses:
+        '200':
+          description: List of chirps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "4a13e062-09d8-41b7-8a51-85c85cd4b528"
+                    created_at:
+                      type: string
+                      example: "2025-05-15T08:19:18.031988Z"
+                    updated_at:
+                      type: string
+                      example: "2025-05-15T08:19:18.031988Z"
+                    body:
+                      type: string
+                      example: "Hello, world!"
+                    user_id:
+                      type: string
+                      example: "123e4567-e89b-12d3-a456-426614174000"                 
   /api/users:
     post:
       summary: Create user
