@@ -13,6 +13,7 @@ paths:
         - Admin
       summary: Health check endpoint
       description: Returns 200 OK if the service is running.
+      operationId: getHealthz
       responses:
         '200':
           description: Service is healthy
@@ -25,11 +26,12 @@ paths:
       tags:
         - Chirps
       summary: Get a chirp.
-      description: Get a single chirp by it's ID.
+      description: Get a single chirp by its ID.
+      operationId: getChirpById
       parameters:
         - name: chirpID
           in: path
-          description: The ID of the chirps.
+          description: The ID of the chirp.
           required: true
           schema:
             type: string
@@ -56,12 +58,22 @@ paths:
                   user_id:
                     type: string
                     example: "123e4567-e89b-12d3-a456-426614174000"
+        '404':
+          description: Chirp not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /api/chirps:
     post:
       tags:
         - Chirps
       summary: Create a chirp
-      description: Validates a chirp (message) and create it.
+      description: Validates a chirp (message) and creates it.
+      operationId: createChirp
       requestBody:
         required: true
         content:
@@ -75,6 +87,9 @@ paths:
                 user_id:
                   type: string
                   description: The UUID of the creating user.
+            example:
+              body: "Hello, world!"
+              user_id: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         '201':
           description: Chirp created
@@ -112,6 +127,7 @@ paths:
         - Chirps
       summary: Get all chirps.
       description: List all chirps. Order by created at.
+      operationId: getAllChirps
       responses:
         '200':
           description: List of chirps
@@ -136,13 +152,14 @@ paths:
                       example: "Hello, world!"
                     user_id:
                       type: string
-                      example: "123e4567-e89b-12d3-a456-426614174000"                 
+                      example: "123e4567-e89b-12d3-a456-426614174000"
   /api/users:
     post:
       tags:
         - Users
       summary: Create user
       description: Creates a new user.
+      operationId: createUser
       requestBody:
         required: true
         content:
@@ -156,6 +173,9 @@ paths:
                 password:
                   type: string
                   description: The user's password
+            example:
+              email: "user@example.com"
+              password: "password123"
       responses:
         '201':
           description: User created successfully
@@ -191,6 +211,7 @@ paths:
         - Login
       summary: Login
       description: Login to the app.
+      operationId: loginUser
       requestBody:
         required: true
         content:
@@ -204,6 +225,9 @@ paths:
                 password:
                   type: string
                   description: The user's password
+            example:
+              email: "user@example.com"
+              password: "password123"
       responses:
         '200':
           description: User logged in
@@ -239,6 +263,7 @@ paths:
         - Admin
       summary: Metrics endpoint
       description: Returns internal metrics for the application.
+      operationId: getMetrics
       responses:
         '200':
           description: Successful response with metrics
@@ -252,8 +277,34 @@ paths:
         - Admin
       summary: Reset everything
       description: Resets application data. It will only work when PLATFORM is dev.
+      operationId: resetApp
       responses:
         '200':
           description: Reset successfully
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+security:
+  - bearerAuth: []
