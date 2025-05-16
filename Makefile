@@ -1,2 +1,3 @@
 run:
-	@go build -o bin/out && ./bin/out
+	@go mod tidy
+	@air
