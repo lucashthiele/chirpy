@@ -15,8 +15,7 @@ import (
 )
 
 type params struct {
-	Body   string    `json:"body"`
-	UserId uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
 }
 
 type responseData struct {
@@ -65,6 +64,11 @@ func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
 		response.RespondWithInternalServerError(res, err)
 	}
 
+	userId, ok := req.Context().Value(config.UserIDKey).(uuid.UUID)
+	if !ok {
+		response.RespondWithInternalServerError(res, fmt.Errorf("omg you're so bad at this"))
+	}
+
 	err = validateChirp(params.Body)
 	if err != nil {
 		response.RespondWithError(res, http.StatusBadRequest, err.Error())
@@ -75,7 +79,7 @@ func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
 
 	chirp := database.CreateChirpParams{
 		Body:   cleanedBody,
-		UserID: params.UserId,
+		UserID: userId,
 	}
 
 	createdChirp, err := cfg.Db.CreateChirp(req.Context(), chirp)

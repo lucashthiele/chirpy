@@ -12,9 +12,12 @@ import (
 	"github.com/lucashthiele/chirpy/pkg/response"
 )
 
+const maximumExpiresInSeconds int = 60 * 60
+
 type params struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email            string `json:"email"`
+	Password         string `json:"password"`
+	ExpiresInSeconds int    `json:"expires_in_seconds"`
 }
 
 type userJSON struct {
@@ -22,6 +25,7 @@ type userJSON struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Token     string    `json:"token"`
 }
 
 func HandleLogin(res http.ResponseWriter, req *http.Request) {
@@ -37,6 +41,11 @@ func HandleLogin(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
 		return
+	}
+
+	if data.ExpiresInSeconds <= 0 ||
+		data.ExpiresInSeconds > maximumExpiresInSeconds {
+		data.ExpiresInSeconds = maximumExpiresInSeconds
 	}
 
 	user, err := cfg.Db.GetUserByEmail(req.Context(), data.Email)
@@ -55,11 +64,20 @@ func HandleLogin(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	duration := time.Duration(time.Second * time.Duration(data.ExpiresInSeconds))
+
+	token, err := auth.MakeJWT(user.ID, cfg.AppSecret, duration)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+		return
+	}
+
 	userResp := userJSON{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt.Time,
 		UpdatedAt: user.UpdatedAt.Time,
 		Email:     user.Email,
+		Token:     token,
 	}
 
 	response.RespondWithJSON(res, http.StatusOK, userResp)
