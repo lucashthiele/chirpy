@@ -43,6 +43,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", chirps.HandlerGetChirpByID)
 
 	mux.HandleFunc("POST /api/login", auth.HandleLogin)
+	mux.HandleFunc("POST /api/refresh", auth.HandleRefreshToken)
+	mux.HandleFunc("POST /api/revoke", auth.HandleRevokeRefreshToken)
 
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 }

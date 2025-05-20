@@ -68,11 +68,13 @@ func (cfg *ApiConfig) MiddlewareAuth(next http.HandlerFunc) http.HandlerFunc {
 		token, err := auth.GetBearerToken(req.Header)
 		if err != nil {
 			response.RespondWithError(resp, http.StatusUnauthorized, err.Error())
+			return
 		}
 
 		userId, err := auth.ValidateJWT(token, cfg.AppSecret)
 		if err != nil {
 			response.RespondWithError(resp, http.StatusUnauthorized, "Unauthorized")
+			return
 		}
 		ctx := context.WithValue(req.Context(), UserIDKey, userId)
 
