@@ -169,8 +169,15 @@ paths:
       tags:
         - Chirps
       summary: Get all chirps.
-      description: List all chirps. Order by created at.
+      description: List all chirps. Order by created at. Optionally filter by author_id.
       operationId: getAllChirps
+      parameters:
+        - name: author_id
+          in: query
+          required: false
+          description: Filter chirps by the author's user ID
+          schema:
+            type: string
       responses:
         '200':
           description: List of chirps
