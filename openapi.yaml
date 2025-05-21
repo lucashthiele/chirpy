@@ -169,7 +169,7 @@ paths:
       tags:
         - Chirps
       summary: Get all chirps.
-      description: List all chirps. Order by created at. Optionally filter by author_id.
+      description: List all chirps. Order by created at. Optionally filter by author_id. Supports sorting.
       operationId: getAllChirps
       parameters:
         - name: author_id
@@ -178,6 +178,16 @@ paths:
           description: Filter chirps by the author's user ID
           schema:
             type: string
+        - name: sort
+          in: query
+          required: false
+          description: "Sort order for chirps by created_at. Allowed values: asc (default), desc."
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
       responses:
         '200':
           description: List of chirps

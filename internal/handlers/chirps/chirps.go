@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -114,6 +115,14 @@ func getAuthorIDQueryParam(req *http.Request) (uuid.UUID, error) {
 	return authorUUID, nil
 }
 
+func getSortByQueryParam(req *http.Request) string {
+	sort := req.URL.Query().Get("sort")
+	if sort == "" {
+		sort = "asc"
+	}
+	return sort
+}
+
 func HandleGetAllChirps(res http.ResponseWriter, req *http.Request) {
 	cfg, err := config.New()
 	if err != nil {
@@ -127,9 +136,17 @@ func HandleGetAllChirps(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	sort := getSortByQueryParam(req)
+
 	chirps, err := cfg.Db.ListAllChirps(req.Context(), authorId)
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
+	}
+
+	if sort == "desc" { // chirps come pre-ordered with asc from db
+		slices.SortFunc(chirps, func(ci, cj database.Chirp) int {
+			return cj.CreatedAt.Compare(ci.CreatedAt)
+		})
 	}
 
 	bodyResp := make([]responseData, len(chirps))
