@@ -40,7 +40,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 
 	mux.HandleFunc("POST /api/chirps", cfg.MiddlewareAuth(chirps.HandleCreateChirp))
 	mux.HandleFunc("GET /api/chirps", chirps.HandleGetAllChirps)
-	mux.HandleFunc("GET /api/chirps/{chirpID}", chirps.HandlerGetChirpByID)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", chirps.HandleGetChirpByID)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfg.MiddlewareAuth(chirps.HandleDeleteChirp))
 
 	mux.HandleFunc("POST /api/login", auth.HandleLogin)
 	mux.HandleFunc("POST /api/refresh", auth.HandleRefreshToken)

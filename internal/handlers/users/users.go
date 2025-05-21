@@ -79,6 +79,7 @@ func HandleUpdateUsers(res http.ResponseWriter, req *http.Request) {
 	userId, ok := req.Context().Value(config.UserIDKey).(uuid.UUID)
 	if !ok {
 		response.RespondWithInternalServerError(res, fmt.Errorf("omg you're so bad at this"))
+		return
 	}
 
 	hashedPassword, err := auth.HashPassword(data.Password)

@@ -31,3 +31,7 @@ SELECT ID,
        USER_ID
   FROM CHIRPS
  WHERE ID = $1;
+
+-- name: DeleteChirpByID :exec
+DELETE FROM CHIRPS
+ WHERE ID = $1;
