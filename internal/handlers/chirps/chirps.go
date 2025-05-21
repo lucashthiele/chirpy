@@ -99,13 +99,35 @@ func HandleCreateChirp(res http.ResponseWriter, req *http.Request) {
 	response.RespondWithJSON(res, http.StatusCreated, bodyResp)
 }
 
+func getAuthorIDQueryParam(req *http.Request) (uuid.UUID, error) {
+	var err error
+	var authorUUID uuid.UUID = uuid.Nil
+
+	authorId := req.URL.Query().Get("author_id")
+	if authorId != "" {
+		authorUUID, err = uuid.Parse(authorId)
+		if err != nil {
+			return uuid.Nil, err
+		}
+	}
+
+	return authorUUID, nil
+}
+
 func HandleGetAllChirps(res http.ResponseWriter, req *http.Request) {
 	cfg, err := config.New()
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
+		return
 	}
 
-	chirps, err := cfg.Db.ListAllChirps(req.Context())
+	authorId, err := getAuthorIDQueryParam(req)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+		return
+	}
+
+	chirps, err := cfg.Db.ListAllChirps(req.Context(), authorId)
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
 	}

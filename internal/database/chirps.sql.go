@@ -86,11 +86,12 @@ SELECT ID,
        BODY,
        USER_ID
   FROM CHIRPS
+ WHERE USER_ID = COALESCE(NULLIF($1, '00000000-0000-0000-0000-000000000000'::UUID), USER_ID)
  ORDER BY CREATED_AT ASC
 `
 
-func (q *Queries) ListAllChirps(ctx context.Context) ([]Chirp, error) {
-	rows, err := q.db.QueryContext(ctx, listAllChirps)
+func (q *Queries) ListAllChirps(ctx context.Context, dollar_1 interface{}) ([]Chirp, error) {
+	rows, err := q.db.QueryContext(ctx, listAllChirps, dollar_1)
 	if err != nil {
 		return nil, err
 	}
