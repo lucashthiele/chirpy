@@ -19,10 +19,11 @@ type params struct {
 }
 
 type userJSON struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Email       string    `json:"email"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
 }
 
 func HandleCreateUsers(res http.ResponseWriter, req *http.Request) {
@@ -54,10 +55,11 @@ func HandleCreateUsers(res http.ResponseWriter, req *http.Request) {
 	}
 
 	userJSON := userJSON{
-		ID:        createdUser.ID,
-		CreatedAt: createdUser.CreatedAt.Time,
-		UpdatedAt: createdUser.UpdatedAt.Time,
-		Email:     createdUser.Email,
+		ID:          createdUser.ID,
+		CreatedAt:   createdUser.CreatedAt.Time,
+		UpdatedAt:   createdUser.UpdatedAt.Time,
+		Email:       createdUser.Email,
+		IsChirpyRed: createdUser.IsChirpyRed,
 	}
 
 	response.RespondWithJSON(res, http.StatusCreated, userJSON)
@@ -87,22 +89,23 @@ func HandleUpdateUsers(res http.ResponseWriter, req *http.Request) {
 		response.RespondWithInternalServerError(res, err)
 	}
 
-	updateParams := database.UpdateUserParams{
+	updateParams := database.UpdateUserEmailAndPasswordParams{
 		ID:             userId,
 		Email:          data.Email,
 		HashedPassword: hashedPassword,
 	}
 
-	updatedUser, err := cfg.Db.UpdateUser(req.Context(), updateParams)
+	updatedUser, err := cfg.Db.UpdateUserEmailAndPassword(req.Context(), updateParams)
 	if err != nil {
 		response.RespondWithInternalServerError(res, err)
 	}
 
 	userJSON := userJSON{
-		ID:        updatedUser.ID,
-		CreatedAt: updatedUser.CreatedAt.Time,
-		UpdatedAt: updatedUser.UpdatedAt.Time,
-		Email:     updatedUser.Email,
+		ID:          updatedUser.ID,
+		CreatedAt:   updatedUser.CreatedAt.Time,
+		UpdatedAt:   updatedUser.UpdatedAt.Time,
+		Email:       updatedUser.Email,
+		IsChirpyRed: updatedUser.IsChirpyRed,
 	}
 
 	response.RespondWithJSON(res, http.StatusOK, userJSON)

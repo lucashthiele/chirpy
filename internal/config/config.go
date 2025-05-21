@@ -83,15 +83,19 @@ func (cfg *ApiConfig) MiddlewareAuth(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func (cfg *ApiConfig) HandleReset() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(resp http.ResponseWriter, r *http.Request) {
 		if cfg.Platform != "dev" {
-			response.RespondWithError(w, http.StatusForbidden, "Forbidden")
+			response.RespondWithError(resp, http.StatusForbidden, "Forbidden")
 			return
 		}
-		cfg.Db.DeleteAllUsers(r.Context())
+		err := cfg.Db.DeleteAllUsers(r.Context())
+		if err != nil {
+			response.RespondWithInternalServerError(resp, err)
+			return
+		}
 		cfg.FileServerHits.Store(0)
 		log.Println("Reset endpoint called. Everything was wiped")
-		w.WriteHeader(http.StatusOK)
+		resp.WriteHeader(http.StatusOK)
 	})
 }
 

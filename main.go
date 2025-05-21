@@ -12,6 +12,7 @@ import (
 	"github.com/lucashthiele/chirpy/internal/handlers/chirps"
 	"github.com/lucashthiele/chirpy/internal/handlers/healthz"
 	"github.com/lucashthiele/chirpy/internal/handlers/users"
+	"github.com/lucashthiele/chirpy/internal/handlers/webhooks"
 )
 
 const port string = "42069"
@@ -49,6 +50,8 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 	mux.HandleFunc("PUT /api/users", cfg.MiddlewareAuth(users.HandleUpdateUsers))
+
+	mux.HandleFunc("POST /api/polka/webhooks", webhooks.HandleUpgradeUser)
 }
 
 func main() {
