@@ -23,6 +23,7 @@ type ApiConfig struct {
 	FileServerHits *atomic.Int32
 	Db             *database.Queries
 	AppSecret      string
+	PolkaKey       string
 }
 
 var instance *ApiConfig
@@ -49,6 +50,7 @@ func New() (*ApiConfig, error) {
 			FileServerHits: &atomic.Int32{},
 			Db:             db,
 			AppSecret:      os.Getenv("APP_SECRET"),
+			PolkaKey:       os.Getenv("POLKA_KEY"),
 		}
 		instance.FileServerHits.Store(0)
 	}
@@ -65,7 +67,7 @@ func (cfg *ApiConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
 
 func (cfg *ApiConfig) MiddlewareAuth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-		token, err := auth.GetBearerToken(req.Header)
+		token, err := auth.GetBearerToken(&req.Header)
 		if err != nil {
 			response.RespondWithError(resp, http.StatusUnauthorized, err.Error())
 			return
@@ -79,6 +81,23 @@ func (cfg *ApiConfig) MiddlewareAuth(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(req.Context(), UserIDKey, userId)
 
 		next.ServeHTTP(resp, req.WithContext(ctx))
+	})
+}
+
+func (cfg *ApiConfig) MiddlewarePolka(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		APIKey, err := auth.GetAPIKey(&req.Header)
+		if err != nil {
+			response.RespondWithError(resp, http.StatusUnauthorized, err.Error())
+			return
+		}
+
+		if cfg.PolkaKey != APIKey {
+			response.RespondWithError(resp, http.StatusUnauthorized, "Unauthorized")
+			return
+		}
+
+		next.ServeHTTP(resp, req)
 	})
 }
 

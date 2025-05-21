@@ -106,7 +106,7 @@ func HandleRefreshToken(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	refreshToken, err := auth.GetBearerToken(req.Header)
+	refreshToken, err := auth.GetBearerToken(&req.Header)
 	if err != nil {
 		response.RespondWithError(resp, http.StatusUnauthorized, err.Error())
 	}
@@ -141,7 +141,7 @@ func HandleRevokeRefreshToken(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	refreshToken, err := auth.GetBearerToken(req.Header)
+	refreshToken, err := auth.GetBearerToken(&req.Header)
 	if err != nil {
 		response.RespondWithError(resp, http.StatusUnauthorized, err.Error())
 	}

@@ -138,7 +138,7 @@ func TestGetBearerToken(t *testing.T) {
 			for k, v := range tc.headers {
 				h.Set(k, v)
 			}
-			token, err := GetBearerToken(h)
+			token, err := GetBearerToken(&h)
 			if tc.wantErr {
 				if err == nil {
 					t.Error("expected error but got none")

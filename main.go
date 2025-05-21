@@ -34,10 +34,10 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	handler := http.StripPrefix("/app/", http.FileServer(getFilepathRoot()))
 	mux.Handle("/app/", cfg.MiddlewareMetricsInc(handler))
 
+	mux.HandleFunc("GET /api/healthz", healthz.HandleHealthz)
+
 	mux.HandleFunc("GET /admin/metrics", cfg.HandleMetrics())
 	mux.HandleFunc("POST /admin/reset", cfg.HandleReset())
-
-	mux.HandleFunc("GET /api/healthz", healthz.HandleHealthz)
 
 	mux.HandleFunc("POST /api/chirps", cfg.MiddlewareAuth(chirps.HandleCreateChirp))
 	mux.HandleFunc("GET /api/chirps", chirps.HandleGetAllChirps)
@@ -51,7 +51,7 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
 	mux.HandleFunc("PUT /api/users", cfg.MiddlewareAuth(users.HandleUpdateUsers))
 
-	mux.HandleFunc("POST /api/polka/webhooks", webhooks.HandleUpgradeUser)
+	mux.HandleFunc("POST /api/polka/webhooks", cfg.MiddlewarePolka(webhooks.HandleUpgradeUser))
 }
 
 func main() {

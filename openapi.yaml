@@ -67,13 +67,51 @@ paths:
                 properties:
                   error:
                     type: string
+    delete:
+      tags:
+        - Chirps
+      summary: Delete a chirp
+      description: Deletes a chirp by its ID. Requires authentication.
+      operationId: deleteChirpById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: chirpID
+          in: path
+          description: The ID of the chirp.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chirp deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '404':
+          description: Chirp not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /api/chirps:
     post:
       tags:
         - Chirps
       summary: Create a chirp
-      description: Validates a chirp (message) and creates it.
+      description: Validates a chirp (message) and creates it. Requires authentication.
       operationId: createChirp
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -84,12 +122,8 @@ paths:
                 body:
                   type: string
                   description: The chirp message to validate.
-                user_id:
-                  type: string
-                  description: The UUID of the creating user.
             example:
               body: "Hello, world!"
-              user_id: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         '201':
           description: Chirp created
@@ -115,6 +149,15 @@ paths:
                     example: "123e4567-e89b-12d3-a456-426614174000"
         '400':
           description: Invalid request or chirp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -205,6 +248,68 @@ paths:
                 properties:
                   error:
                     type: string
+    put:
+      tags:
+        - Users
+      summary: Update user
+      description: Updates the authenticated user's information. Requires authentication.
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's new email
+                password:
+                  type: string
+                  description: The user's new password
+            example:
+              email: "newuser@example.com"
+              password: "newpassword123"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  updated_at:
+                    type: string
+                    example: "2025-05-15T08:19:18.031988Z"
+                  email:
+                    type: string
+                    example: "newuser@example.com"
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /api/login:
     post:
       tags:
@@ -257,6 +362,117 @@ paths:
                 properties:
                   error:
                     type: string
+  /api/refresh:
+    post:
+      tags:
+        - Auth
+      summary: Refresh access token
+      description: Refreshes the access token using a valid refresh token.
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: The refresh token
+            example:
+              refresh_token: "some-refresh-token"
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "new-access-token"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/revoke:
+    post:
+      tags:
+        - Auth
+      summary: Revoke refresh token
+      description: Revokes a refresh token, logging the user out.
+      operationId: revokeToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: The refresh token to revoke
+            example:
+              refresh_token: "some-refresh-token"
+      responses:
+        '200':
+          description: Token revoked
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /api/polka/webhooks:
+    post:
+      tags:
+        - Webhooks
+      summary: Polka webhook for user upgrade
+      description: Handles Polka webhook to upgrade user status. Requires Polka API key authentication.
+      operationId: polkaWebhook
+      security:
+        - polkaApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event:
+                  type: string
+                  description: The event type
+                data:
+                  type: object
+                  properties:
+                    user_id:
+                      type: string
+                      description: The user ID to upgrade
+            example:
+              event: "upgrade"
+              data:
+                user_id: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '204':
+          description: Webhook processed
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
   /admin/metrics:
     get:
       tags:
@@ -296,6 +512,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    polkaApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: 'Authorization: ApiKey <api-key>'
   responses:
     ErrorResponse:
       description: Error response
