@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -60,4 +61,48 @@ func HandleCreateUsers(res http.ResponseWriter, req *http.Request) {
 	}
 
 	response.RespondWithJSON(res, http.StatusCreated, userJSON)
+}
+
+func HandleUpdateUsers(res http.ResponseWriter, req *http.Request) {
+	cfg, err := config.New()
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	data := &params{}
+
+	err = parser.ParseBody(req.Body, data)
+	if err != nil {
+		response.RespondWithError(res, http.StatusBadRequest, err.Error())
+	}
+
+	userId, ok := req.Context().Value(config.UserIDKey).(uuid.UUID)
+	if !ok {
+		response.RespondWithInternalServerError(res, fmt.Errorf("omg you're so bad at this"))
+	}
+
+	hashedPassword, err := auth.HashPassword(data.Password)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	updateParams := database.UpdateUserParams{
+		ID:             userId,
+		Email:          data.Email,
+		HashedPassword: hashedPassword,
+	}
+
+	updatedUser, err := cfg.Db.UpdateUser(req.Context(), updateParams)
+	if err != nil {
+		response.RespondWithInternalServerError(res, err)
+	}
+
+	userJSON := userJSON{
+		ID:        updatedUser.ID,
+		CreatedAt: updatedUser.CreatedAt.Time,
+		UpdatedAt: updatedUser.UpdatedAt.Time,
+		Email:     updatedUser.Email,
+	}
+
+	response.RespondWithJSON(res, http.StatusOK, userJSON)
 }

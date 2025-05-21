@@ -47,6 +47,7 @@ func configureRoutes(mux *http.ServeMux, cfg *config.ApiConfig) {
 	mux.HandleFunc("POST /api/revoke", auth.HandleRevokeRefreshToken)
 
 	mux.HandleFunc("POST /api/users", users.HandleCreateUsers)
+	mux.HandleFunc("PUT /api/users", cfg.MiddlewareAuth(users.HandleUpdateUsers))
 }
 
 func main() {
